@@ -77,7 +77,10 @@ export default function CheckInHistory() {
         <div className="space-y-4">
           <div>
             <h4 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-1">Goals:</h4>
-            <p className="text-xl text-gray-900 dark:text-white">{mostRecent.goals}</p>
+            <p className="text-xl text-gray-900 dark:text-white">{mostRecent.goals[0]}</p>
+            <p className="text-xl text-gray-900 dark:text-white">{mostRecent.goals[1]}</p>
+            <p className="text-xl text-gray-900 dark:text-white">{mostRecent.goals[2]}</p>
+            <p className="text-xl text-gray-900 dark:text-white">{mostRecent.goals[3]}</p>
           </div>
           
           <div>

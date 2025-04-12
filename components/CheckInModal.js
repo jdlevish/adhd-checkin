@@ -1,13 +1,19 @@
 import { useState } from 'react';
 
 export default function CheckInModal({ isOpen, onClose, onSubmit }) {
-  const [goals, setGoals] = useState('');
+  const [goal1, setGoal1] = useState('');
+  const [goal2, setGoal2] = useState('');
+  const [goal3, setGoal3] = useState('');
+  const [goal4, setGoal4] = useState('');
   const [intentions, setIntentions] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await onSubmit({ goals, intentions, date: new Date() });
-    setGoals('');
+    await onSubmit({ goal1, goal2, goal3, goal4, intentions, date: new Date() });
+    setGoal1('');
+    setGoal2('');
+    setGoal3('');
+    setGoal4('');
     setIntentions('');
     onClose();
   };
@@ -34,8 +40,29 @@ export default function CheckInModal({ isOpen, onClose, onSubmit }) {
               What are your main goals for today?
             </label>
             <textarea
-              value={goals}
-              onChange={(e) => setGoals(e.target.value)}
+              value={goal1}
+              onChange={(e) => setGoal1(e.target.value)}
+              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 min-h-[100px] bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              placeholder="List your main goals for today..."
+              required
+            />
+             <textarea
+              value={goal2}
+              onChange={(e) => setGoal2(e.target.value)}
+              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 min-h-[100px] bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              placeholder="List your main goals for today..."
+              required
+            />
+             <textarea
+              value={goal3}
+              onChange={(e) => setGoal3(e.target.value)}
+              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 min-h-[100px] bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              placeholder="List your main goals for today..."
+              required
+            />
+             <textarea
+              value={goal4}
+              onChange={(e) => setGoal4(e.target.value)}
               className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 min-h-[100px] bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder="List your main goals for today..."
               required

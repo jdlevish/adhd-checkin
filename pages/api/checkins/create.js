@@ -13,14 +13,14 @@ export default async function handler(req, res) {
       return res.status(401).json({ message: 'Not authenticated' });
     }
 
-    const { goals, intentions, date } = req.body;
+    const { goal1, goal2, goal3, goal4, intentions, date } = req.body;
     const client = await clientPromise;
     const db = client.db();
 
     // Create the check-in
     const result = await db.collection('checkins').insertOne({
       userId: session.user.id,
-      goals,
+      goals: [goal1, goal2, goal3, goal4],
       intentions,
       date: new Date(date),
       createdAt: new Date(),
