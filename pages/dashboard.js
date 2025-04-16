@@ -18,6 +18,7 @@ import CheckInModal from '../components/CheckInModal';
 import ThemeToggle from '../components/ThemeToggle';
 import CheckInHistory from '../components/CheckInHistory';
 import ProgressOverview from '../components/ProgressOverview';
+import TodoListCard from '../components/TodoListCard';
 
 // Theme context for dark mode functionality
 import { useTheme } from '../context/ThemeContext';
@@ -240,13 +241,8 @@ export default function Dashboard() {
             </p>
           </div>
         
-        {/* add goals to to=do list */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors">
-          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">To-do List</h2>
-          <p className="text-gray-600 dark:text-gray-400">
-            Add your goals to your to-do list to help you stay organized and focused.
-          </p>
-        </div>
+        {/* To-do List Card */}
+        <TodoListCard todaysCheckinId={hasTodayCheckIn && lastCheckIn ? lastCheckIn._id : null} />
         {/* Progress Card */}
         <ProgressOverview />
         
