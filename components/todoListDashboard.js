@@ -184,6 +184,28 @@ export default function TodoListDashboard() {
   };
   
   /**
+   * Check if goals from today's check-in have already been imported
+   * @returns {Promise<boolean>} True if goals have been imported, false otherwise
+   */
+  const checkGoalsImported = async () => {
+    if (!todaysCheckin) return false;
+    
+    try {
+      const response = await fetch(`/api/todos/check-imported-goals?checkinId=${todaysCheckin._id}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to check imported goals');
+      }
+      
+      const data = await response.json();
+      return data.imported;
+    } catch (err) {
+      console.error('Error checking imported goals:', err);
+      return false;
+    }
+  };
+  
+  /**
    * Import goals from today's check-in as todo items
    */
   const handleImportGoals = async () => {
@@ -195,6 +217,21 @@ export default function TodoListDashboard() {
     try {
       setImportLoading(true);
       
+      // Check if goals have already been imported
+      const goalsAlreadyImported = await checkGoalsImported();
+      
+      if (goalsAlreadyImported) {
+        // If goals are already imported, just refresh the todo list
+        fetchTodos();
+        
+        // Show success message indicating goals were already imported
+        setImportSuccess(true);
+        setTimeout(() => setImportSuccess(false), 3000);
+        setError('Goals from today\'s check-in have already been imported.');
+        return;
+      }
+      
+      // Import goals if they haven't been imported yet
       const response = await fetch('/api/todos/import-from-checkin', {
         method: 'POST',
         headers: {
