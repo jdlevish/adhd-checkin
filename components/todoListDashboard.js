@@ -4,6 +4,9 @@ import { useSession } from 'next-auth/react';
 // Theme context for dark mode functionality
 import { useTheme } from '../context/ThemeContext';
 
+// Custom components
+import TaskBreakdownModal from './TaskBreakdownModal';
+
 /**
  * TodoListDashboard Component
  * 
@@ -22,6 +25,7 @@ export default function TodoListDashboard() {
   
   // State for todo list
   const [todos, setTodos] = useState([]);
+  const [organizedTodos, setOrganizedTodos] = useState([]);
   const [newTodoText, setNewTodoText] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -30,6 +34,10 @@ export default function TodoListDashboard() {
   const [todaysCheckin, setTodaysCheckin] = useState(null);
   const [importLoading, setImportLoading] = useState(false);
   const [importSuccess, setImportSuccess] = useState(false);
+  
+  // State for task breakdown modal
+  const [isBreakdownModalOpen, setIsBreakdownModalOpen] = useState(false);
+  const [currentParentTask, setCurrentParentTask] = useState(null);
   
   /**
    * Fetch the user's todo list from the API
@@ -45,6 +53,9 @@ export default function TodoListDashboard() {
       
       const data = await response.json();
       setTodos(data.todos);
+      
+      // Organize todos to group subtasks under their parent tasks
+      organizeTodos(data.todos);
     } catch (err) {
       console.error('Error fetching todos:', err);
       setError('Failed to load your todo list. Please try again later.');
@@ -75,6 +86,55 @@ export default function TodoListDashboard() {
       console.error('Error fetching today\'s check-in:', err);
       // Not setting error state here as this is not critical
     }
+  };
+  
+  /**
+   * Organize todos to group subtasks under their parent tasks
+   * @param {Array} todosList - The list of todos to organize
+   */
+  const organizeTodos = (todosList) => {
+    // Create a map of parent IDs to their subtasks
+    const subtaskMap = {};
+    const parentTasks = [];
+    
+    // First pass: separate parent tasks and create subtask map
+    todosList.forEach(todo => {
+      if (todo.isSubtask && todo.parentId) {
+        // This is a subtask
+        if (!subtaskMap[todo.parentId]) {
+          subtaskMap[todo.parentId] = [];
+        }
+        subtaskMap[todo.parentId].push(todo);
+      } else {
+        // This is a parent task
+        parentTasks.push(todo);
+      }
+    });
+    
+    // Second pass: sort parent tasks by creation date (newest first)
+    parentTasks.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    // Third pass: build the organized list with parents and their subtasks
+    const organized = [];
+    parentTasks.forEach(parent => {
+      // Add the parent task
+      organized.push(parent);
+      
+      // Add any subtasks for this parent
+      if (subtaskMap[parent._id]) {
+        // Sort subtasks by creation date (newest first)
+        const sortedSubtasks = subtaskMap[parent._id].sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        
+        // Add each subtask after its parent
+        sortedSubtasks.forEach(subtask => {
+          organized.push(subtask);
+        });
+      }
+    });
+    
+    setOrganizedTodos(organized);
   };
   
   /**
@@ -111,7 +171,12 @@ export default function TodoListDashboard() {
       }
       
       const newTodo = await response.json();
-      setTodos([newTodo, ...todos]);
+      const updatedTodos = [newTodo, ...todos];
+      setTodos(updatedTodos);
+      
+      // Also update organizedTodos
+      organizeTodos(updatedTodos);
+      
       setNewTodoText('');
     } catch (err) {
       console.error('Error adding todo:', err);
@@ -127,10 +192,17 @@ export default function TodoListDashboard() {
       const todoToUpdate = todos.find(todo => todo._id === todoId);
       const updatedTodo = { ...todoToUpdate, completed: !todoToUpdate.completed };
       
-      // Optimistically update UI
-      setTodos(todos.map(todo => 
+      // Optimistically update todos state
+      const updatedTodos = todos.map(todo => 
         todo._id === todoId ? updatedTodo : todo
-      ));
+      );
+      setTodos(updatedTodos);
+      
+      // Also update organizedTodos state to reflect the change immediately
+      const updatedOrganizedTodos = organizedTodos.map(todo => 
+        todo._id === todoId ? updatedTodo : todo
+      );
+      setOrganizedTodos(updatedOrganizedTodos);
       
       // Update in database
       const response = await fetch(`/api/todos/update`, {
@@ -160,10 +232,44 @@ export default function TodoListDashboard() {
    */
   const handleDeleteTodo = async (todoId) => {
     try {
-      // Optimistically update UI
-      setTodos(todos.filter(todo => todo._id !== todoId));
+      // Check if this is a parent task with subtasks
+      const isParent = todos.some(todo => todo.parentId === todoId);
       
-      // Delete from database
+      if (isParent) {
+        // If it's a parent task, we need to delete all subtasks first
+        const subtaskIds = todos
+          .filter(todo => todo.parentId === todoId)
+          .map(todo => todo._id);
+        
+        // Optimistically update UI for both states
+        const filteredTodos = todos.filter(
+          todo => todo._id !== todoId && !subtaskIds.includes(todo._id)
+        );
+        setTodos(filteredTodos);
+        
+        // Also update organizedTodos
+        const filteredOrganizedTodos = organizedTodos.filter(
+          todo => todo._id !== todoId && !subtaskIds.includes(todo._id)
+        );
+        setOrganizedTodos(filteredOrganizedTodos);
+        
+        // Delete subtasks from database
+        for (const subtaskId of subtaskIds) {
+          await fetch(`/api/todos/delete`, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ todoId: subtaskId }),
+          });
+        }
+      } else {
+        // Optimistically update UI for both states
+        setTodos(todos.filter(todo => todo._id !== todoId));
+        setOrganizedTodos(organizedTodos.filter(todo => todo._id !== todoId));
+      }
+      
+      // Delete the main task from database
       const response = await fetch(`/api/todos/delete`, {
         method: 'DELETE',
         headers: {
@@ -249,6 +355,9 @@ export default function TodoListDashboard() {
       // Update the todo list with the newly imported items
       fetchTodos();
       
+      // Organize the updated todos
+      organizeTodos(todos);
+      
       // Show success message
       setImportSuccess(true);
       setTimeout(() => setImportSuccess(false), 3000);
@@ -257,6 +366,54 @@ export default function TodoListDashboard() {
       setError('Failed to import goals. Please try again.');
     } finally {
       setImportLoading(false);
+    }
+  };
+  
+  /**
+   * Open the task breakdown modal for a specific todo
+   * @param {string} todoId - The ID of the todo to break down
+   * @param {string} todoText - The text of the todo to break down
+   */
+  const openBreakdownModal = (todoId, todoText) => {
+    setCurrentParentTask({ _id: todoId, text: todoText });
+    setIsBreakdownModalOpen(true);
+  };
+  
+  /**
+   * Handle submitting subtasks from the breakdown modal
+   * @param {Array} subtaskList - List of subtask texts
+   */
+  const handleSubmitSubtasks = async (subtaskList) => {
+    if (!currentParentTask || subtaskList.length === 0) return;
+    
+    try {
+      // Create each subtask as a new todo item
+      for (const subtaskText of subtaskList) {
+        const response = await fetch('/api/todos/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            text: subtaskText,
+            parentId: currentParentTask._id // Link to the parent task
+          }),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to create subtask');
+        }
+      }
+      
+      // Refresh the todo list to show the new subtasks
+      fetchTodos();
+      
+      // Show success message
+      setImportSuccess(true);
+      setTimeout(() => setImportSuccess(false), 3000);
+    } catch (err) {
+      console.error('Error breaking down task:', err);
+      setError('Failed to break down task. Please try again.');
     }
   };
   
@@ -352,15 +509,15 @@ export default function TodoListDashboard() {
       
       {/* Todo list */}
       <ul className="space-y-2">
-        {todos.length === 0 ? (
+        {organizedTodos.length === 0 ? (
           <li className="p-3 bg-gray-100 dark:bg-gray-700 rounded-md text-gray-600 dark:text-gray-300">
             No todos yet. Add one above or import from today's check-in.
           </li>
         ) : (
-          todos.map((todo) => (
+          organizedTodos.map((todo) => (
             <li 
               key={todo._id}
-              className="p-3 bg-gray-100 dark:bg-gray-700 rounded-md flex justify-between items-center"
+              className={`p-3 ${todo.isSubtask ? 'ml-8 border-l-4 border-blue-400 dark:border-blue-600' : ''} bg-gray-100 dark:bg-gray-700 rounded-md flex justify-between items-center`}
             >
               <div className="flex items-center">
                 <input
@@ -375,19 +532,44 @@ export default function TodoListDashboard() {
                   {todo.text}
                 </span>
               </div>
-              <button
-                onClick={() => handleDeleteTodo(todo._id)}
-                className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                aria-label="Delete todo"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
+              <div className="flex items-center space-x-2">
+                {/* Break Down Task button */}
+                <button
+                  onClick={() => openBreakdownModal(todo._id, todo.text)}
+                  className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center"
+                  aria-label="Break down task"
+                  title="Break down task"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" />
+                  </svg>
+                  <span className="ml-1 text-xs">Break down task</span>
+                </button>
+                
+                {/* Delete button */}
+                <button
+                  onClick={() => handleDeleteTodo(todo._id)}
+                  className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                  aria-label="Delete todo"
+                  title="Delete todo"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
             </li>
           ))
         )}
       </ul>
+      
+      {/* Task Breakdown Modal */}
+      <TaskBreakdownModal
+        isOpen={isBreakdownModalOpen}
+        onClose={() => setIsBreakdownModalOpen(false)}
+        onSubmit={handleSubmitSubtasks}
+        parentTask={currentParentTask}
+      />
     </div>
   );
 }

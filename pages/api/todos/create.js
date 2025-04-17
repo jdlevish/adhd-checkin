@@ -39,7 +39,7 @@ export default async function handler(req, res) {
     const db = client.db();
 
     // Extract todo data from request body
-    const { text, completed = false, checkinId = null } = req.body;
+    const { text, completed = false, checkinId = null, parentId = null } = req.body;
 
     // Validate required fields
     if (!text) {
@@ -52,6 +52,8 @@ export default async function handler(req, res) {
       text,
       completed,
       checkinId,
+      parentId,  // Add parentId field for subtasks
+      isSubtask: !!parentId,  // Flag to indicate if this is a subtask
       createdAt: new Date(),
       updatedAt: new Date()
     };
