@@ -21,7 +21,7 @@ export default function TodoListDashboard() {
   const { data: session } = useSession();
   
   // Theme context for dark mode
-  const { darkMode } = useTheme();
+  const { /* darkMode */ } = useTheme();
   
   // State for todo list
   const [todos, setTodos] = useState([]);
@@ -145,7 +145,7 @@ export default function TodoListDashboard() {
       fetchTodos();
       fetchTodaysCheckin();
     }
-  }, [session]);
+  }, [session, fetchTodaysCheckin]); // fetchTodos is intentionally omitted
   
   /**
    * Handle adding a new todo item
@@ -333,7 +333,7 @@ export default function TodoListDashboard() {
         // Show success message indicating goals were already imported
         setImportSuccess(true);
         setTimeout(() => setImportSuccess(false), 3000);
-        setError('Goals from today\'s check-in have already been imported.');
+        setError('Goals from today&apos;s check-in have already been imported.');
         return;
       }
       
@@ -349,8 +349,6 @@ export default function TodoListDashboard() {
       if (!response.ok) {
         throw new Error('Failed to import goals');
       }
-      
-      const data = await response.json();
       
       // Update the todo list with the newly imported items
       fetchTodos();

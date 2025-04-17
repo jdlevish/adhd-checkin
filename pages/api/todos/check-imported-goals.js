@@ -13,7 +13,6 @@ import { authOptions } from '../auth/[...nextauth]';
 
 // Database connection import
 import clientPromise from '../../../lib/mongodb';
-import { ObjectId } from 'mongodb';
 
 /**
  * API handler for checking if goals from a check-in have been imported as todo items

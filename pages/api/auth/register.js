@@ -26,12 +26,12 @@ export default async function handler(req, res) {
     // Hash the password
     const hashedPassword = await hash(password, 12);
 
-    // Create the user
-    const result = await db.collection('users').insertOne({
-      name,
-      email,
+    // Insert the new user into the database
+    await db.collection('users').insertOne({
+      name: name,
+      email: email,
       password: hashedPassword,
-      createdAt: new Date(),
+      createdAt: new Date()
     });
 
     res.status(201).json({ message: 'User created successfully' });

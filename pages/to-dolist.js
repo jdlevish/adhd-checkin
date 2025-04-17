@@ -2,7 +2,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/router';
 
 // React hooks
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 
 // Component imports
 import TodoListDashboard from '../components/todoListDashboard';
@@ -22,7 +22,7 @@ import { useTheme } from '../context/ThemeContext';
 export default function ToDos() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { darkMode } = useTheme();
+  const { /* darkMode */ } = useTheme();
 
   // Redirect to login if not authenticated
   useEffect(() => {

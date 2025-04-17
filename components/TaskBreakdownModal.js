@@ -7,7 +7,7 @@
  * @module components/TaskBreakdownModal
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 /**
  * TaskBreakdownModal Component
