@@ -145,7 +145,7 @@ export default function TodoListDashboard() {
       fetchTodos();
       fetchTodaysCheckin();
     }
-  }, [session, fetchTodaysCheckin]); // fetchTodos is intentionally omitted
+  }, [session]);
   
   /**
    * Handle adding a new todo item

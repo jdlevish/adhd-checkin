@@ -49,7 +49,7 @@ export default function ToDos() {
         {/* Header */}
         <header className="bg-white dark:bg-gray-800 shadow-md transition-colors">
           <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">ADHD Check-in</h1>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white"><a href="/dashboard">ADHD Check-in</a></h1>
             <div className="flex items-center space-x-4">
               <ThemeToggle />
               <button

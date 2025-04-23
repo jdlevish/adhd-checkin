@@ -77,10 +77,13 @@ export default function CheckInHistory() {
         <div className="space-y-4">
           <div>
             <h4 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-1">Goals:</h4>
-            <p className="text-xl text-gray-900 dark:text-white">{mostRecent.goals[0]}</p>
-            <p className="text-xl text-gray-900 dark:text-white">{mostRecent.goals[1]}</p>
-            <p className="text-xl text-gray-900 dark:text-white">{mostRecent.goals[2]}</p>
-            <p className="text-xl text-gray-900 dark:text-white">{mostRecent.goals[3]}</p>
+            {Array.isArray(mostRecent.goals) && mostRecent.goals.length > 0 ? (
+              mostRecent.goals.map((goal, idx) => (
+                <p key={idx} className="text-xl text-gray-900 dark:text-white">{goal}</p>
+              ))
+            ) : (
+              <p className="text-xl text-gray-900 dark:text-white">No goals found.</p>
+            )}
           </div>
           
           <div>
@@ -107,7 +110,12 @@ export default function CheckInHistory() {
                     </h4>
                     <div className="mt-1">
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        <span className="font-medium">Goals:</span> {checkin.goals}
+                        <span className="font-medium">Goals:</span>
+                        {Array.isArray(checkin.goals) && checkin.goals.length > 0
+                          ? checkin.goals.map((goal, i) => (
+                              <span key={i}> {goal}{i < checkin.goals.length - 1 ? ',' : ''}</span>
+                            ))
+                          : ' None'}
                       </p>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         <span className="font-medium">Intentions:</span> {checkin.intentions}

@@ -35,17 +35,24 @@ export default async function handler(req, res) {
     }
 
     // Extract check-in data from request body
-    const { goal1, goal2, goal3, goal4, intentions, date } = req.body;
-    
+    let { goals, intentions, date } = req.body;
+    // Accept both string and array (for backward compatibility)
+    if (!Array.isArray(goals)) {
+      if (typeof goals === 'string') {
+        goals = [goals];
+      } else {
+        goals = [];
+      }
+    }
+    // Filter out empty goals
+    goals = goals.map(g => (g || '').trim()).filter(Boolean);
     // Validate required fields
-    if (!goal1 || !intentions || !date) {
+    if (goals.length < 1 || !intentions || !date) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
-    
     // Connect to the MongoDB database
     const client = await clientPromise;
     const db = client.db();
-
     // Insert the new check-in document into the database
     const result = await db.collection('checkins').insertOne({
       userId: session.user.id,       // Associate check-in with current user

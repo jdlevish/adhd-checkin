@@ -21,12 +21,8 @@ import { useState, useEffect } from 'react';
  * @returns {JSX.Element|null} The modal component or null if not open
  */
 export default function CheckInModal({ isOpen, onClose, onSubmit, isEditMode = false, initialData = null }) {
-  // State for each of the four individual goals
-  const [goal1, setGoal1] = useState('');
-  const [goal2, setGoal2] = useState('');
-  const [goal3, setGoal3] = useState('');
-  const [goal4, setGoal4] = useState('');
-  
+  // State for an array of goals
+  const [goals, setGoals] = useState(['']);
   // State for intentions
   const [intentions, setIntentions] = useState('');
 
@@ -39,22 +35,13 @@ export default function CheckInModal({ isOpen, onClose, onSubmit, isEditMode = f
    */
   useEffect(() => {
     if (isEditMode && initialData) {
-      // Handle array of goals or individual goal fields
       if (Array.isArray(initialData.goals)) {
-        // New format: goals stored as an array
-        setGoal1(initialData.goals[0] || ''); // First goal or empty string
-        setGoal2(initialData.goals[1] || ''); // Second goal or empty string
-        setGoal3(initialData.goals[2] || ''); // Third goal or empty string
-        setGoal4(initialData.goals[3] || ''); // Fourth goal or empty string
+        setGoals(initialData.goals.length > 0 ? initialData.goals : ['']);
       } else {
-        // Fallback for older data format where goals might be individual fields
-        // or a single string field
-        setGoal1(initialData.goal1 || initialData.goals || '');
-        setGoal2(initialData.goal2 || '');
-        setGoal3(initialData.goal3 || '');
-        setGoal4(initialData.goal4 || '');
+        // Fallback for older data format
+        const fallbackGoals = [initialData.goal1, initialData.goal2, initialData.goal3, initialData.goal4].filter(Boolean);
+        setGoals(fallbackGoals.length > 0 ? fallbackGoals : ['']);
       }
-      // Set intentions from the initial data
       setIntentions(initialData.intentions || '');
     }
   }, [isEditMode, initialData]);
@@ -69,30 +56,32 @@ export default function CheckInModal({ isOpen, onClose, onSubmit, isEditMode = f
    * @param {Event} e - The form submission event
    */
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Prevent default form submission behavior
-    
-    // Preserve the original date if editing, otherwise use current date
+    e.preventDefault();
+    // Filter out empty goals
+    const validGoals = goals.map(g => g.trim()).filter(Boolean);
+    if (validGoals.length < 1) {
+      alert('Please enter at least one goal.');
+      return;
+    }
     const date = isEditMode && initialData ? initialData.date : new Date();
-    
-    // Call the onSubmit callback with all form data
-    await onSubmit({ goal1, goal2, goal3, goal4, intentions, date });
-    
-    // Reset form fields
-    setGoal1('');
-    setGoal2('');
-    setGoal3('');
-    setGoal4('');
+    await onSubmit({ goals: validGoals, intentions, date });
+    setGoals(['']);
     setIntentions('');
-    
-    // Close the modal
     onClose();
   };
 
   if (!isOpen) return null;
 
-  // Don't render anything if the modal is not open
-  if (!isOpen) return null;
-  
+  // Handlers for dynamic goals
+  const handleGoalChange = (idx, value) => {
+    setGoals(goals => goals.map((g, i) => (i === idx ? value : g)));
+  };
+  const handleAddGoal = () => setGoals(goals => [...goals, '']);
+  const handleRemoveGoal = (idx) => {
+    if (goals.length === 1) return; // always keep at least one
+    setGoals(goals => goals.filter((_, i) => i !== idx));
+  };
+
   /**
    * Render the modal with form for check-in data
    */
@@ -122,38 +111,34 @@ export default function CheckInModal({ isOpen, onClose, onSubmit, isEditMode = f
             <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
               What are your main goals for today?
             </label>
-            {/* Goal 1 input */}
-            <textarea
-              value={goal1}
-              onChange={(e) => setGoal1(e.target.value)}
-              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 min-h-[100px] bg-white dark:bg-gray-700 text-gray-900 dark:text-white mb-2"
-              placeholder="Goal 1"
-              required
-            />
-            {/* Goal 2 input */}
-            <textarea
-              value={goal2}
-              onChange={(e) => setGoal2(e.target.value)}
-              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 min-h-[100px] bg-white dark:bg-gray-700 text-gray-900 dark:text-white mb-2"
-              placeholder="Goal 2"
-              required
-            />
-            {/* Goal 3 input */}
-            <textarea
-              value={goal3}
-              onChange={(e) => setGoal3(e.target.value)}
-              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 min-h-[100px] bg-white dark:bg-gray-700 text-gray-900 dark:text-white mb-2"
-              placeholder="Goal 3"
-              required
-            />
-            {/* Goal 4 input */}
-            <textarea
-              value={goal4}
-              onChange={(e) => setGoal4(e.target.value)}
-              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 min-h-[100px] bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              placeholder="Goal 4"
-              required
-            />
+            {goals.map((goal, idx) => (
+              <div key={idx} className="flex items-start mb-2">
+                <textarea
+                  value={goal}
+                  onChange={e => handleGoalChange(idx, e.target.value)}
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 min-h-[60px] bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  placeholder={`Goal ${idx + 1}`}
+                  required={idx === 0} // Only require the first goal
+                />
+                {goals.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveGoal(idx)}
+                    className="ml-2 mt-1 text-red-500 hover:text-red-700"
+                    aria-label="Remove goal"
+                  >
+                    &times;
+                  </button>
+                )}
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={handleAddGoal}
+              className="mt-2 px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 rounded hover:bg-blue-200 dark:hover:bg-blue-800"
+            >
+              + Add Another Goal
+            </button>
           </div>
           {/* Intentions section */}
           <div className="mb-4">
