@@ -19,6 +19,7 @@ import ThemeToggle from '../components/ThemeToggle';
 import CheckInHistory from '../components/CheckInHistory';
 import ProgressOverview from '../components/ProgressOverview';
 import TodoListCard from '../components/TodoListCard';
+import JournalCard from '../components/JournalCard';
 
 // Theme context for dark mode functionality
 import { useTheme } from '../context/ThemeContext';
@@ -179,7 +180,7 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Daily Check-in Card - Allows users to create or edit their daily check-in */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6  h-auto transition-colors">
             <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Daily Check-in</h2>
             {lastCheckIn ? (
               // If user has at least one previous check-in
@@ -232,6 +233,9 @@ export default function Dashboard() {
           </div>
           
          
+
+          {/* Journal Card */}
+          <JournalCard />
 
           {/* Tips Card */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors">

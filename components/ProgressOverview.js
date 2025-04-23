@@ -106,7 +106,7 @@ export default function ProgressOverview() {
    * Displays the progress overview with statistics and visual indicators
    */
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors md:col-span-3">
       <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Progress Overview</h2>
       
       <div className="space-y-4">
