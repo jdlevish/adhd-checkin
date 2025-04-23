@@ -56,7 +56,7 @@ export default async function handler(req, res) {
     // Insert the new check-in document into the database
     const result = await db.collection('checkins').insertOne({
       userId: session.user.id,       // Associate check-in with current user
-      goals: [goal1, goal2, goal3, goal4],  // Store goals as an array
+      goals: goals,  // Store goals as an array
       intentions,                    // Store intentions
       date: new Date(date),          // Convert date string to Date object
       createdAt: new Date(),         // Add creation timestamp
