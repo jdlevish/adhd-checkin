@@ -152,12 +152,30 @@ export default function TodoListCard({ todaysCheckinId }) {
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                 </svg>
-                Import Goals to To-do List
+                Import Today's Goals to To-Do List
               </>
             )}
           </>
         )}
       </button>
-    </div>
+      {goalsImported ? (
+              <div>
+                
+              </div>
+            ) : (
+              <a href="/to-dolist"><button
+             
+              disabled={loading || (!todaysCheckinId && !goalsImported)}
+              className="w-full px-4 my-2 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            > 
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            Go to To-do List
+          </button></a>
+              
+            
+            )}
+      </div>
   );
 }
