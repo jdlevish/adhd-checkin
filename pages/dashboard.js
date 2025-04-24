@@ -20,6 +20,7 @@ import CheckInHistory from '../components/CheckInHistory';
 import ProgressOverview from '../components/ProgressOverview';
 import TodoListCard from '../components/TodoListCard';
 import JournalCard from '../components/JournalCard';
+import CBTToolboxCard from '../components/CBTToolboxCard';
 
 // Theme context for dark mode functionality
 import { useTheme } from '../context/ThemeContext';
@@ -236,6 +237,9 @@ export default function Dashboard() {
 
           {/* Journal Card */}
           <JournalCard />
+
+          {/* CBT Toolbox Card */}
+          <CBTToolboxCard />
 
           {/* Tips Card */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors">
